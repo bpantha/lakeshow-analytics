@@ -222,4 +222,10 @@ export const NBA_TEAMS: Record<number, { name: string; abbreviation: string; cit
   1610612761: { name: 'Raptors', abbreviation: 'TOR', city: 'Toronto' },
   1610612764: { name: 'Wizards', abbreviation: 'WAS', city: 'Washington' },
   1610612762: { name: 'Jazz', abbreviation: 'UTA', city: 'Utah' },
+  1610612745: { name: 'Rockets', abbreviation: 'HOU', city: 'Houston' },
+  1610612746: { name: 'Clippers', abbreviation: 'LAC', city: 'Los Angeles' },
+  1610612754: { name: 'Pacers', abbreviation: 'IND', city: 'Indiana' },
+  1610612751: { name: 'Nets', abbreviation: 'BKN', city: 'Brooklyn' },
+  1610612763: { name: 'Grizzlies', abbreviation: 'MEM', city: 'Memphis' },
+  1610612766: { name: 'Hornets', abbreviation: 'CHA', city: 'Charlotte' },
 }
