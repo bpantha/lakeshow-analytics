@@ -55,14 +55,27 @@ export default async function NightlyReportPage() {
             <div className="card">
               <h3 className="section-header">Key Insights</h3>
               <div className="space-y-3">
-                {latest.ai_insights.map((insight: string, i: number) => (
-                  <div key={i} className="flex gap-3 p-3 bg-surface-2 rounded-xl">
-                    <div className="w-6 h-6 rounded-full bg-lakers-gold/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <span className="text-xs font-bold text-lakers-gold">{i + 1}</span>
+                {latest.ai_insights.map((item: string | { insight: string; category?: string; priority?: string }, i: number) => {
+                  const text = typeof item === 'string' ? item : item.insight
+                  const category = typeof item === 'object' ? item.category : undefined
+                  const priority = typeof item === 'object' ? item.priority : undefined
+                  return (
+                    <div key={i} className="flex gap-3 p-3 bg-surface-2 rounded-xl">
+                      <div className="w-6 h-6 rounded-full bg-lakers-gold/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="text-xs font-bold text-lakers-gold">{i + 1}</span>
+                      </div>
+                      <div className="flex-1">
+                        {category && (
+                          <p className="text-xs font-semibold text-lakers-gold mb-1 uppercase tracking-wide">
+                            {category}
+                            {priority === 'high' && <span className="ml-2 text-red-400">● High Priority</span>}
+                          </p>
+                        )}
+                        <p className="text-sm text-gray-300 leading-relaxed">{text}</p>
+                      </div>
                     </div>
-                    <p className="text-sm text-gray-300 leading-relaxed">{insight}</p>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           )}
@@ -72,12 +85,12 @@ export default async function NightlyReportPage() {
             <div className="card">
               <h3 className="section-header">Player Highlights</h3>
               <div className="space-y-3">
-                {latest.player_highlights.map((h: { player_name: string; headline: string; stat_line: string; trend: string; flag_type?: string }, i: number) => (
+                {latest.player_highlights.map((h: { player?: string; player_name?: string; highlight?: string; headline?: string; stat_line?: string; trend?: string; flag_type?: string }, i: number) => (
                   <div key={i} className="flex items-start justify-between p-3 bg-surface-2 rounded-xl">
                     <div>
-                      <p className="text-sm font-semibold text-white">{h.player_name}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">{h.headline}</p>
-                      <p className="text-xs text-gray-500 mt-1">{h.stat_line}</p>
+                      <p className="text-sm font-semibold text-white">{h.player_name ?? h.player}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{h.headline ?? h.highlight}</p>
+                      {h.stat_line && <p className="text-xs text-gray-500 mt-1">{h.stat_line}</p>}
                     </div>
                     <div className="text-right">
                       {h.flag_type && (

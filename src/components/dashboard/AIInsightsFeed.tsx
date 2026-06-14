@@ -2,9 +2,11 @@ import { Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import { format, parseISO } from 'date-fns'
 
+type InsightItem = string | { insight: string; category?: string; priority?: string }
+
 interface AIInsightsFeedProps {
   summary?: string
-  insights: string[]
+  insights: InsightItem[]
   reportDate?: string
 }
 
@@ -39,12 +41,19 @@ export default function AIInsightsFeed({ summary, insights, reportDate }: AIInsi
           )}
           {insights.length > 0 && (
             <div className="space-y-2 mt-3">
-              {insights.slice(0, 4).map((insight, i) => (
-                <div key={i} className="flex gap-2 text-sm">
-                  <span className="text-lakers-gold mt-0.5 flex-shrink-0">•</span>
-                  <span className="text-gray-400">{insight}</span>
-                </div>
-              ))}
+              {insights.slice(0, 4).map((item, i) => {
+                const text = typeof item === 'string' ? item : item.insight
+                const category = typeof item === 'object' ? item.category : undefined
+                return (
+                  <div key={i} className="flex gap-2 text-sm">
+                    <span className="text-lakers-gold mt-0.5 flex-shrink-0">•</span>
+                    <span className="text-gray-400">
+                      {category && <span className="text-lakers-gold font-medium">{category}: </span>}
+                      {text}
+                    </span>
+                  </div>
+                )
+              })}
             </div>
           )}
           <Link href="/nightly-report" className="text-xs text-lakers-gold hover:text-lakers-gold-light block mt-2">
