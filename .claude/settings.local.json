@@ -37,7 +37,13 @@
       "Bash(gh auth *)",
       "Bash(git init *)",
       "Bash(git add *)",
-      "Bash(git commit -m 'Initial commit: Lake Show Analytics - Lakers coaching dashboard *)"
+      "Bash(git commit -m 'Initial commit: Lake Show Analytics - Lakers coaching dashboard *)",
+      "Bash(gh repo *)",
+      "Bash(vercel *)",
+      "Bash(cp /tmp/seed_demo.js \"/Users/jay/Documents/Developer/LakeShow Analytics/seed_demo.js\")",
+      "Bash(node seed_demo.js)",
+      "Bash(git commit -m 'Wire ESPN stats + fix NBA_TEAMS map for all 30 teams *)",
+      "Bash(git commit -m 'Add all ESPN data layer and dashboard updates *)"
     ]
   }
 }
