@@ -1,0 +1,43 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(claude-api)",
+      "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --no-git)",
+      "Bash(npm install *)",
+      "Bash(npx tsc *)",
+      "Bash(npm run *)",
+      "Bash(supabase --version)",
+      "Bash(HOMEBREW_NO_REQUIRE_TAP_TRUST=1 brew install supabase/tap/supabase)",
+      "Bash(curl -L https://github.com/supabase/cli/releases/latest/download/supabase_darwin_arm64.tar.gz -o /tmp/supabase.tar.gz)",
+      "Bash(tar -xzf /tmp/supabase.tar.gz -C /tmp)",
+      "Bash(sudo mv /tmp/supabase /usr/local/bin/supabase)",
+      "Bash(mkdir -p /Users/jay/.local/share/supabase)",
+      "Bash(tar -xzf /tmp/supabase.tar.gz -C /Users/jay/.local/share/supabase)",
+      "Read(//Users/jay/.local/share/**)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000)",
+      "Bash(curl -s -X POST http://localhost:3000/api/auth/signup -H 'Content-Type: application/json' -d '{\"email\":\"test@test.com\",\"password\":\"test123\",\"fullName\":\"Test\"}')",
+      "Bash(curl -s 'https://stats.nba.com/stats/commonteamroster?TeamID=1610612747&Season=2025-26' -H 'Accept: application/json' -H 'Origin: https://www.nba.com' -H 'Referer: https://www.nba.com/' -H 'User-Agent: Mozilla/5.0 \\(Macintosh; Intel Mac OS X 10_15_7\\) AppleWebKit/537.36')",
+      "Bash(python3 -c ' *)",
+      "Bash(curl -s 'https://stats.nba.com/stats/commonteamroster?TeamID=1610612747&Season=2025-26' -H 'Accept: application/json' -H 'Origin: https://www.nba.com' -H 'Referer: https://www.nba.com/' -H 'User-Agent: Mozilla/5.0 \\(Macintosh; Intel Mac OS X 10_15_7\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/120.0.0.0 Safari/537.36' --max-time 15)",
+      "Bash(curl -sv 'https://stats.nba.com/stats/commonteamroster?TeamID=1610612747&Season=2025-26' -H 'Accept: application/json, text/plain, */*' -H 'Accept-Language: en-US,en;q=0.9' -H 'Origin: https://www.nba.com' -H 'Referer: https://www.nba.com/' -H 'User-Agent: Mozilla/5.0 \\(Macintosh; Intel Mac OS X 10_15_7\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/120.0.0.0 Safari/537.36' --max-time 15)",
+      "Bash(curl -s -o /tmp/nba_test.txt -w '%{http_code}' 'https://stats.nba.com/stats/commonteamroster?TeamID=1610612747&Season=2025-26' -H 'Accept: application/json, text/plain, */*' -H 'Origin: https://www.nba.com' -H 'Referer: https://www.nba.com/' -H 'User-Agent: Mozilla/5.0 \\(Macintosh; Intel Mac OS X 10_15_7\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/120.0.0.0 Safari/537.36' --max-time 15)",
+      "Read(//tmp/**)",
+      "Bash(curl -s -o /tmp/nba_resp.json -w '%{http_code}' 'https://stats.nba.com/stats/commonteamroster?TeamID=1610612747&Season=2025-26' -H 'Accept: application/json, text/plain, */*' -H 'Accept-Language: en-US,en;q=0.9' -H 'Cache-Control: no-cache' -H 'Connection: keep-alive' -H 'Host: stats.nba.com' -H 'Origin: https://www.nba.com' -H 'Referer: https://www.nba.com/' -H 'User-Agent: Mozilla/5.0 \\(Macintosh; Intel Mac OS X 10_15_7\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/120.0.0.0 Safari/537.36' --max-time 10)",
+      "Bash(curl -s \"https://api.balldontlie.io/v1/teams/19\")",
+      "Bash(python3 -m json.tool)",
+      "Bash(curl -s \"https://api.balldontlie.io/v1/players?search=lebron\")",
+      "Bash(curl -sv \"https://api.balldontlie.io/v1/teams/19\")",
+      "Bash(curl *)",
+      "Bash(~/.local/share/supabase/supabase db *)",
+      "Bash(pkill -f \"next dev\")",
+      "Bash(gh --version)",
+      "Bash(npx vercel *)",
+      "Bash(brew install *)",
+      "Bash(HOMEBREW_NO_REQUIRE_TAP_TRUST=1 brew install gh)",
+      "Bash(gh auth *)",
+      "Bash(git init *)",
+      "Bash(git add *)",
+      "Bash(git commit -m 'Initial commit: Lake Show Analytics - Lakers coaching dashboard *)"
+    ]
+  }
+}

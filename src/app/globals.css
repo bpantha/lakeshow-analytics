@@ -1,0 +1,70 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --lakers-purple: #552583;
+  --lakers-gold: #FDB927;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #0f0f14;
+  color: #e2e8f0;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track { background: #16161e; }
+::-webkit-scrollbar-thumb { background: #2e2e48; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #552583; }
+
+@layer components {
+  .card {
+    @apply bg-surface-1 border border-surface-3 rounded-xl p-5;
+  }
+  .card-sm {
+    @apply bg-surface-1 border border-surface-3 rounded-lg p-4;
+  }
+  .stat-value {
+    @apply text-2xl font-bold text-white;
+  }
+  .stat-label {
+    @apply text-xs text-gray-400 uppercase tracking-wider;
+  }
+  .badge-gold {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-lakers-gold/20 text-lakers-gold;
+  }
+  .badge-purple {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-lakers-purple/30 text-purple-300;
+  }
+  .badge-green {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-900/40 text-green-400;
+  }
+  .badge-red {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-900/40 text-red-400;
+  }
+  .btn-primary {
+    @apply inline-flex items-center gap-2 px-4 py-2 bg-lakers-purple hover:bg-lakers-purple-light text-white rounded-lg font-medium text-sm transition-colors;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center gap-2 px-4 py-2 bg-surface-3 hover:bg-surface-4 text-gray-200 rounded-lg font-medium text-sm transition-colors;
+  }
+  .btn-gold {
+    @apply inline-flex items-center gap-2 px-4 py-2 bg-lakers-gold hover:bg-lakers-gold-light text-gray-900 rounded-lg font-bold text-sm transition-colors;
+  }
+  .input {
+    @apply bg-surface-2 border border-surface-3 rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-lakers-purple text-sm w-full;
+  }
+  .section-header {
+    @apply text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3;
+  }
+}
