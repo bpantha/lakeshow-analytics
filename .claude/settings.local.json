@@ -43,7 +43,15 @@
       "Bash(cp /tmp/seed_demo.js \"/Users/jay/Documents/Developer/LakeShow Analytics/seed_demo.js\")",
       "Bash(node seed_demo.js)",
       "Bash(git commit -m 'Wire ESPN stats + fix NBA_TEAMS map for all 30 teams *)",
-      "Bash(git commit -m 'Add all ESPN data layer and dashboard updates *)"
+      "Bash(git commit -m 'Add all ESPN data layer and dashboard updates *)",
+      "Bash(git push *)",
+      "Bash(git rm *)",
+      "Bash(git commit -m 'Remove seed script from repo *)",
+      "Bash(git commit -m 'Fix React render error: handle object-shaped ai_insights and player_highlights *)",
+      "WebFetch(domain:www.linkedin.com)",
+      "WebSearch",
+      "WebFetch(domain:rocketreach.co)",
+      "Bash(git commit -m 'Fix score parsing, add playoff record, show recent results in offseason *)"
     ]
   }
 }

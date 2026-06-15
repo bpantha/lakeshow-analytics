@@ -171,15 +171,21 @@ interface ScheduleResponse {
       status: { type: { completed: boolean; description: string } }
       competitors: Array<{
         homeAway: string
-        score: string
+        score: { value?: number; displayValue?: string } | string
         team: { id: string; abbreviation: string; location: string }
       }>
     }>
   }>
 }
 
-export async function getLakersSchedule(): Promise<ESPNGame[]> {
-  const url = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams/${ESPN_TEAM_ID}/schedule?season=${SEASON}&seasontype=2`
+function parseScore(score: { value?: number; displayValue?: string } | string | undefined): number {
+  if (!score) return 0
+  if (typeof score === 'object') return score.value ?? 0
+  return parseFloat(score) || 0
+}
+
+async function fetchScheduleForType(seasonType: number): Promise<ESPNGame[]> {
+  const url = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams/${ESPN_TEAM_ID}/schedule?season=${SEASON}&seasontype=${seasonType}`
   const data = await espnFetch<ScheduleResponse>(url)
   return (data.events ?? []).map(e => {
     const comp = e.competitions?.[0]
@@ -192,13 +198,13 @@ export async function getLakersSchedule(): Promise<ESPNGame[]> {
         id: home?.team.id ?? '',
         abbreviation: home?.team.abbreviation ?? '',
         city: home?.team.location ?? '',
-        score: parseInt(home?.score ?? '0', 10) || 0,
+        score: parseScore(home?.score),
       },
       awayTeam: {
         id: away?.team.id ?? '',
         abbreviation: away?.team.abbreviation ?? '',
         city: away?.team.location ?? '',
-        score: parseInt(away?.score ?? '0', 10) || 0,
+        score: parseScore(away?.score),
       },
       completed: comp?.status.type.completed ?? false,
       status: comp?.status.type.description ?? '',
@@ -206,19 +212,33 @@ export async function getLakersSchedule(): Promise<ESPNGame[]> {
   })
 }
 
-export function getLakersRecord(games: ESPNGame[]): { wins: number; losses: number } {
-  let wins = 0
-  let losses = 0
+export async function getLakersSchedule(): Promise<ESPNGame[]> {
+  const [regular, playoffs] = await Promise.all([
+    fetchScheduleForType(2),
+    fetchScheduleForType(3).catch(() => []),
+  ])
+  return [...regular, ...playoffs].sort((a, b) => a.date.localeCompare(b.date))
+}
+
+export function getLakersRecord(games: ESPNGame[]): { wins: number; losses: number; playoffWins: number; playoffLosses: number } {
+  let wins = 0, losses = 0, playoffWins = 0, playoffLosses = 0
   const lakersId = String(ESPN_TEAM_ID)
+  // Regular season ends before April; playoffs start in April
   for (const g of games) {
     if (!g.completed) continue
     const lakersHome = g.homeTeam.id === lakersId
     const lakersScore = lakersHome ? g.homeTeam.score : g.awayTeam.score
     const oppScore = lakersHome ? g.awayTeam.score : g.homeTeam.score
-    if (lakersScore > oppScore) wins++
-    else losses++
+    const isPlayoff = g.date >= '2026-04-01'
+    if (isPlayoff) {
+      if (lakersScore > oppScore) playoffWins++
+      else playoffLosses++
+    } else {
+      if (lakersScore > oppScore) wins++
+      else losses++
+    }
   }
-  return { wins, losses }
+  return { wins, losses, playoffWins, playoffLosses }
 }
 
 export function getUpcomingESPNGames(games: ESPNGame[], limit = 5): ESPNGame[] {
@@ -226,6 +246,13 @@ export function getUpcomingESPNGames(games: ESPNGame[], limit = 5): ESPNGame[] {
   return games
     .filter(g => !g.completed && g.date >= today)
     .sort((a, b) => a.date.localeCompare(b.date))
+    .slice(0, limit)
+}
+
+export function getRecentESPNGames(games: ESPNGame[], limit = 5): ESPNGame[] {
+  return games
+    .filter(g => g.completed)
+    .sort((a, b) => b.date.localeCompare(a.date))
     .slice(0, limit)
 }
 

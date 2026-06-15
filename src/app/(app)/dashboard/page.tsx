@@ -5,6 +5,7 @@ import {
   getLakersSchedule,
   getLakersRecord,
   getUpcomingESPNGames,
+  getRecentESPNGames,
   type ESPNPlayerStats,
 } from '@/lib/nba/espn'
 import { CURRENT_SEASON } from '@/lib/nba/lakers-data'
@@ -29,8 +30,9 @@ export default async function DashboardPage() {
     : {}
   const schedule = await getLakersSchedule().catch(() => [])
 
-  const { wins, losses } = getLakersRecord(schedule)
+  const { wins, losses, playoffWins, playoffLosses } = getLakersRecord(schedule)
   const upcoming = getUpcomingESPNGames(schedule, 5)
+  const recentGames = upcoming.length === 0 ? getRecentESPNGames(schedule, 5) : []
 
   // Aggregate team stats from roster averages
   const statValues = Object.values(statsMap)
@@ -45,7 +47,7 @@ export default async function DashboardPage() {
     .limit(1)
     .single()
 
-  const gamesPlayed = wins + losses
+  const hasPlayoffs = playoffWins + playoffLosses > 0
 
   return (
     <div className="space-y-8">
@@ -58,14 +60,24 @@ export default async function DashboardPage() {
           </p>
         </div>
         <div className="text-right">
-          <p className="text-xs text-gray-500 uppercase tracking-wider">Team Record</p>
+          <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">
+            {hasPlayoffs ? 'Regular Season' : 'Team Record'}
+          </p>
           <p className="text-2xl font-bold text-white">
             <span className="text-lakers-gold">{wins}</span>
             <span className="text-gray-500 mx-1">–</span>
             <span>{losses}</span>
           </p>
-          {gamesPlayed > 0 && (
-            <p className="text-xs text-gray-500 mt-0.5">{gamesPlayed} games played</p>
+          {hasPlayoffs && (
+            <p className="text-xs text-gray-400 mt-1">
+              Playoffs <span className="text-lakers-gold font-semibold">{playoffWins}</span>
+              <span className="text-gray-600 mx-1">–</span>
+              <span>{playoffLosses}</span>
+              <span className="text-gray-600 ml-1">
+                {playoffLosses === 4 && playoffWins >= 4 ? '· Eliminated R2' :
+                 playoffLosses === 4 ? '· Eliminated R1' : '· In Playoffs'}
+              </span>
+            </p>
           )}
         </div>
       </div>
@@ -111,7 +123,10 @@ export default async function DashboardPage() {
           />
         </div>
         <div className="space-y-6">
-          <UpcomingGamesESPN games={upcoming} />
+          <UpcomingGamesESPN
+            games={upcoming}
+            recentGames={recentGames}
+          />
           <AIInsightsFeed
             summary={recentReport?.team_summary}
             insights={recentReport?.ai_insights ?? []}
