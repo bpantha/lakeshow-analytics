@@ -161,6 +161,13 @@ export interface ESPNGame {
   awayTeam: { id: string; abbreviation: string; city: string; score: number }
   completed: boolean
   status: string
+  isPlayoff: boolean
+}
+
+export interface ESPNTeamStats {
+  pts: number
+  reb: number
+  ast: number
 }
 
 interface ScheduleResponse {
@@ -208,6 +215,7 @@ async function fetchScheduleForType(seasonType: number): Promise<ESPNGame[]> {
       },
       completed: comp?.status.type.completed ?? false,
       status: comp?.status.type.description ?? '',
+      isPlayoff: seasonType === 3,
     }
   })
 }
@@ -223,14 +231,12 @@ export async function getLakersSchedule(): Promise<ESPNGame[]> {
 export function getLakersRecord(games: ESPNGame[]): { wins: number; losses: number; playoffWins: number; playoffLosses: number } {
   let wins = 0, losses = 0, playoffWins = 0, playoffLosses = 0
   const lakersId = String(ESPN_TEAM_ID)
-  // Regular season ends before April; playoffs start in April
   for (const g of games) {
     if (!g.completed) continue
     const lakersHome = g.homeTeam.id === lakersId
     const lakersScore = lakersHome ? g.homeTeam.score : g.awayTeam.score
     const oppScore = lakersHome ? g.awayTeam.score : g.homeTeam.score
-    const isPlayoff = g.date >= '2026-04-01'
-    if (isPlayoff) {
+    if (g.isPlayoff) {
       if (lakersScore > oppScore) playoffWins++
       else playoffLosses++
     } else {
@@ -239,6 +245,38 @@ export function getLakersRecord(games: ESPNGame[]): { wins: number; losses: numb
     }
   }
   return { wins, losses, playoffWins, playoffLosses }
+}
+
+interface TeamStatsResponse {
+  results: {
+    stats: {
+      categories: Array<{
+        stats: Array<{ name: string; value: number }>
+      }>
+    }
+  }
+}
+
+export async function getTeamStats(): Promise<ESPNTeamStats> {
+  try {
+    const url = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams/${ESPN_TEAM_ID}/statistics?season=${SEASON}&seasontype=2`
+    const data = await espnFetch<TeamStatsResponse>(url)
+    const cats = data.results?.stats?.categories ?? []
+    function pick(name: string) {
+      for (const cat of cats) {
+        const s = cat.stats.find(x => x.name === name)
+        if (s) return s.value
+      }
+      return 0
+    }
+    return {
+      pts: pick('avgPoints'),
+      reb: pick('avgRebounds'),
+      ast: pick('avgAssists'),
+    }
+  } catch {
+    return { pts: 0, reb: 0, ast: 0 }
+  }
 }
 
 export function getUpcomingESPNGames(games: ESPNGame[], limit = 5): ESPNGame[] {

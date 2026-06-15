@@ -51,7 +51,8 @@
       "WebFetch(domain:www.linkedin.com)",
       "WebSearch",
       "WebFetch(domain:rocketreach.co)",
-      "Bash(git commit -m 'Fix score parsing, add playoff record, show recent results in offseason *)"
+      "Bash(git commit -m 'Fix score parsing, add playoff record, show recent results in offseason *)",
+      "Bash(git commit -m 'Fix record categorization and use real team stats from ESPN *)"
     ]
   }
 }

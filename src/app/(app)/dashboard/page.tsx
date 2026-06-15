@@ -6,6 +6,7 @@ import {
   getLakersRecord,
   getUpcomingESPNGames,
   getRecentESPNGames,
+  getTeamStats,
   type ESPNPlayerStats,
 } from '@/lib/nba/espn'
 import { CURRENT_SEASON } from '@/lib/nba/lakers-data'
@@ -24,21 +25,18 @@ export default async function DashboardPage() {
 
   const today = new Date()
 
-  const roster = await getESPNRoster().catch(() => [])
+  const [roster, schedule, teamStats] = await Promise.all([
+    getESPNRoster().catch(() => []),
+    getLakersSchedule().catch(() => []),
+    getTeamStats(),
+  ])
   const statsMap: Record<string, ESPNPlayerStats> = roster.length > 0
     ? await getESPNRosterStats(roster).catch(() => ({} as Record<string, ESPNPlayerStats>))
     : {}
-  const schedule = await getLakersSchedule().catch(() => [])
 
   const { wins, losses, playoffWins, playoffLosses } = getLakersRecord(schedule)
   const upcoming = getUpcomingESPNGames(schedule, 5)
   const recentGames = upcoming.length === 0 ? getRecentESPNGames(schedule, 5) : []
-
-  // Aggregate team stats from roster averages
-  const statValues = Object.values(statsMap)
-  const teamPpg = statValues.reduce((s, p) => s + (p.pts ?? 0), 0)
-  const teamRpg = statValues.reduce((s, p) => s + (p.reb ?? 0), 0)
-  const teamApg = statValues.reduce((s, p) => s + (p.ast ?? 0), 0)
 
   const { data: recentReport } = await supabase
     .from('nightly_reports')
@@ -87,18 +85,18 @@ export default async function DashboardPage() {
         <StatCard label="Roster Size" value={String(roster.length || '—')} sublabel="Active players" />
         <StatCard
           label="Team PPG"
-          value={teamPpg > 0 ? teamPpg.toFixed(1) : '—'}
+          value={teamStats.pts > 0 ? teamStats.pts.toFixed(1) : '—'}
           sublabel="2025-26 season"
           accent="gold"
         />
         <StatCard
           label="Team RPG"
-          value={teamRpg > 0 ? teamRpg.toFixed(1) : '—'}
+          value={teamStats.reb > 0 ? teamStats.reb.toFixed(1) : '—'}
           sublabel="2025-26 season"
         />
         <StatCard
           label="Team APG"
-          value={teamApg > 0 ? teamApg.toFixed(1) : '—'}
+          value={teamStats.ast > 0 ? teamStats.ast.toFixed(1) : '—'}
           sublabel="2025-26 season"
         />
       </div>
