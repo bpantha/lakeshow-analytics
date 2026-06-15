@@ -153,7 +153,8 @@ export async function getESPNPlayerStats(espnId: string): Promise<ESPNPlayerStat
       ts_pct: tsPct,
       pf: pickStat(cats, 'avgFouls'),
       min: pickStat(cats, 'avgMinutes'),
-      plus_minus: pickStat(cats, 'plusMinus'),
+      // plusMinus is a season total, not per-game — divide to get meaningful average
+      plus_minus: gp > 0 ? Math.round((pickStat(cats, 'plusMinus') / gp) * 10) / 10 : 0,
       stocks: stl + blk,
       at_ratio: tov > 0 ? ast / tov : 0,
     }
