@@ -5,6 +5,16 @@
 const ESPN_TEAM_ID = 13 // Lakers ESPN ID
 const SEASON = 2026     // 2025-26 season end year
 
+// ESPN datetimes are UTC; NBA games on the West Coast play at night so the UTC date
+// is often one day ahead of the actual local game date. Convert to Pacific time.
+function toLocalDate(isoString: string): string {
+  try {
+    return new Date(isoString).toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' })
+  } catch {
+    return isoString.split('T')[0]
+  }
+}
+
 async function espnFetch<T>(url: string): Promise<T> {
   const res = await fetch(url, {
     next: { revalidate: 3600 },
@@ -200,7 +210,7 @@ async function fetchScheduleForType(seasonType: number): Promise<ESPNGame[]> {
     const away = comp?.competitors?.find(c => c.homeAway === 'away')
     return {
       id: e.id,
-      date: e.date?.split('T')[0] ?? '',
+      date: e.date ? toLocalDate(e.date) : '',
       homeTeam: {
         id: home?.team.id ?? '',
         abbreviation: home?.team.abbreviation ?? '',
@@ -385,12 +395,13 @@ export async function getGameSummary(eventId: string): Promise<ESPNGameSummary |
     const awayComp = competition.competitors?.find((c: any) => c.homeAway === 'away')
 
     const playerTeams: any[] = data.boxscore?.players ?? [] // eslint-disable-line @typescript-eslint/no-explicit-any
-    const homePlayerTeam = playerTeams.find((t: any) => t.team?.id === homeComp?.team?.id) // eslint-disable-line @typescript-eslint/no-explicit-any
-    const awayPlayerTeam = playerTeams.find((t: any) => t.team?.id === awayComp?.team?.id) // eslint-disable-line @typescript-eslint/no-explicit-any
+    // Use String() comparison — ESPN may return id as number in one field and string in another
+    const homePlayerTeam = playerTeams.find((t: any) => String(t.team?.id) === String(homeComp?.team?.id)) // eslint-disable-line @typescript-eslint/no-explicit-any
+    const awayPlayerTeam = playerTeams.find((t: any) => String(t.team?.id) === String(awayComp?.team?.id)) // eslint-disable-line @typescript-eslint/no-explicit-any
 
     return {
       gameId: eventId,
-      date: competition.date ?? '',
+      date: competition.date ? toLocalDate(competition.date) : '',
       isPlayoff: (data.header?.season?.type ?? 2) === 3,
       status: competition.status?.type?.description ?? 'Final',
       homeTeam: {

@@ -17,6 +17,7 @@ export default async function GameDetailPage({ params }: { params: { id: string 
     ...summary.awayTeam.players.map(p => ({ ...p, teamAbbr: summary.awayTeam.abbreviation })),
   ].filter(p => !p.dnp).sort((a, b) => b.pts - a.pts).slice(0, 6)
 
+  // summary.date is already YYYY-MM-DD in local (Pacific) time from espn.ts
   const gameDate = summary.date
     ? format(parseISO(summary.date), 'MMMM d, yyyy')
     : ''
@@ -35,7 +36,10 @@ export default async function GameDetailPage({ params }: { params: { id: string 
     })),
     isPlayoff: summary.isPlayoff,
     date: gameDate,
-  }).catch(() => '')
+  }).catch((err) => {
+    console.error('[GameDetail] generateGameAnalysis failed:', err?.message ?? err)
+    return ''
+  })
 
   const homeWon = summary.homeTeam.score > summary.awayTeam.score
   const lakersIsHome = summary.homeTeam.abbreviation === 'LAL'
@@ -104,15 +108,17 @@ export default async function GameDetailPage({ params }: { params: { id: string 
       </div>
 
       {/* AI Analysis */}
-      {aiAnalysis && (
-        <div className="card border-lakers-purple/30 bg-lakers-purple/5">
-          <div className="flex items-center gap-2 mb-3">
-            <Sparkles className="w-4 h-4 text-lakers-gold" />
-            <h3 className="text-sm font-semibold text-white">AI Game Analysis</h3>
-          </div>
-          <p className="text-sm text-gray-300 leading-relaxed">{aiAnalysis}</p>
+      <div className="card border-lakers-purple/30 bg-lakers-purple/5">
+        <div className="flex items-center gap-2 mb-3">
+          <Sparkles className="w-4 h-4 text-lakers-gold" />
+          <h3 className="text-sm font-semibold text-white">AI Game Analysis</h3>
         </div>
-      )}
+        {aiAnalysis ? (
+          <p className="text-sm text-gray-300 leading-relaxed">{aiAnalysis}</p>
+        ) : (
+          <p className="text-sm text-gray-500 italic">Analysis unavailable for this game.</p>
+        )}
+      </div>
 
       {/* Box scores — Lakers first */}
       <BoxScoreCard team={lakersTeam} isHome={lakersIsHome} />
