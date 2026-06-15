@@ -17,8 +17,8 @@ function GameRow({ game, showResult }: { game: ESPNGame; showResult: boolean }) 
   const won = lakersScore > oppScore
   const gameDate = parseISO(game.date)
 
-  return (
-    <div className="flex items-center justify-between py-2 border-b border-surface-3 last:border-0">
+  const inner = (
+    <div className={`flex items-center justify-between py-2 border-b border-surface-3 last:border-0 ${showResult ? 'hover:bg-surface-2 rounded-lg px-1 -mx-1 transition-colors' : ''}`}>
       <div>
         <p className="text-sm font-medium text-white">
           {isHome ? 'vs' : '@'} {opponent.abbreviation}
@@ -35,6 +35,7 @@ function GameRow({ game, showResult }: { game: ESPNGame; showResult: boolean }) 
           <span className="text-xs text-gray-400 ml-1">
             {lakersScore}–{oppScore}
           </span>
+          <span className="text-xs text-gray-600 ml-1">→</span>
         </div>
       ) : (
         <Link
@@ -46,6 +47,15 @@ function GameRow({ game, showResult }: { game: ESPNGame; showResult: boolean }) 
       )}
     </div>
   )
+
+  if (showResult) {
+    return (
+      <Link href={`/games/${game.id}`} className="block">
+        {inner}
+      </Link>
+    )
+  }
+  return inner
 }
 
 export default function UpcomingGamesESPN({ games, recentGames = [] }: UpcomingGamesESPNProps) {

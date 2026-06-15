@@ -83,6 +83,39 @@ JSON only, no markdown.`
   }
 }
 
+export async function generateGameAnalysis(gameData: {
+  gameId: string
+  homeTeam: { city: string; abbreviation: string; score: number }
+  awayTeam: { city: string; abbreviation: string; score: number }
+  topPerformers: Array<{ name: string; team: string; pts: number; reb: number; ast: number; plusMinus: number }>
+  isPlayoff: boolean
+  date: string
+}): Promise<string> {
+  const isHome = gameData.homeTeam.abbreviation === 'LAL'
+  const lakersScore = isHome ? gameData.homeTeam.score : gameData.awayTeam.score
+  const oppAbbr = isHome ? gameData.awayTeam.abbreviation : gameData.homeTeam.abbreviation
+  const oppScore = isHome ? gameData.awayTeam.score : gameData.homeTeam.score
+  const won = lakersScore > oppScore
+
+  const prompt = `You are an NBA analytics assistant for the LA Lakers coaching staff. Write a post-game analysis (4-5 sentences) for a ${gameData.isPlayoff ? 'playoff' : 'regular season'} game on ${gameData.date}.
+
+Result: Lakers ${won ? 'defeated' : 'lost to'} ${oppAbbr} ${lakersScore}-${oppScore}
+
+Top Performers:
+${gameData.topPerformers.map(p => `- ${p.name} (${p.team}): ${p.pts} PTS, ${p.reb} REB, ${p.ast} AST, ${p.plusMinus > 0 ? '+' : ''}${p.plusMinus} +/-`).join('\n')}
+
+Be tactical and specific. Focus on what drove the outcome, key matchup results, and one concrete thing to build on or address. Coaching-staff tone, not broadcast commentary.`
+
+  const completion = await groq.chat.completions.create({
+    model: MODEL,
+    messages: [{ role: 'user', content: prompt }],
+    max_tokens: 350,
+    temperature: 0.4,
+  })
+
+  return completion.choices[0]?.message?.content ?? ''
+}
+
 export async function flagStatTrends(playerName: string, lastFiveGames: number[], statName: string): Promise<{ flagged: boolean; type?: string; message?: string }> {
   if (lastFiveGames.length < 3) return { flagged: false }
 

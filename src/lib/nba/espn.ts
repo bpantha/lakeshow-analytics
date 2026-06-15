@@ -294,4 +294,123 @@ export function getRecentESPNGames(games: ESPNGame[], limit = 5): ESPNGame[] {
     .slice(0, limit)
 }
 
+export interface ESPNBoxScorePlayer {
+  id: string
+  name: string
+  jersey: string
+  position: string
+  starter: boolean
+  dnp: boolean
+  min: string
+  pts: number
+  fg: string
+  fg3: string
+  ft: string
+  reb: number
+  oreb: number
+  dreb: number
+  ast: number
+  to: number
+  stl: number
+  blk: number
+  pf: number
+  plusMinus: number
+}
+
+export interface ESPNBoxScoreTeam {
+  id: string
+  abbreviation: string
+  city: string
+  score: number
+  players: ESPNBoxScorePlayer[]
+}
+
+export interface ESPNGameSummary {
+  gameId: string
+  date: string
+  homeTeam: ESPNBoxScoreTeam
+  awayTeam: ESPNBoxScoreTeam
+  isPlayoff: boolean
+  status: string
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function parseBoxPlayers(teamEntry: any): ESPNBoxScorePlayer[] {
+  const players: ESPNBoxScorePlayer[] = []
+  const statGroups: any[] = teamEntry.statistics ?? [] // eslint-disable-line @typescript-eslint/no-explicit-any
+  for (const group of statGroups) {
+    const athletes: any[] = group.athletes ?? [] // eslint-disable-line @typescript-eslint/no-explicit-any
+    for (const a of athletes) {
+      const stats: string[] = a.stats ?? []
+      const isDnp = stats.length < 2 || stats[0] === 'DNP' || stats[1] === '--'
+      players.push({
+        id: a.athlete?.id ?? '',
+        name: a.athlete?.displayName ?? '',
+        jersey: a.athlete?.jersey ?? '',
+        position: a.athlete?.position?.abbreviation ?? '',
+        starter: a.starter ?? false,
+        dnp: isDnp,
+        min: isDnp ? 'DNP' : (stats[0] ?? '0'),
+        pts: isDnp ? 0 : (parseInt(stats[1]) || 0),
+        fg: isDnp ? '' : (stats[2] ?? ''),
+        fg3: isDnp ? '' : (stats[3] ?? ''),
+        ft: isDnp ? '' : (stats[4] ?? ''),
+        reb: isDnp ? 0 : (parseInt(stats[5]) || 0),
+        ast: isDnp ? 0 : (parseInt(stats[6]) || 0),
+        to: isDnp ? 0 : (parseInt(stats[7]) || 0),
+        stl: isDnp ? 0 : (parseInt(stats[8]) || 0),
+        blk: isDnp ? 0 : (parseInt(stats[9]) || 0),
+        oreb: isDnp ? 0 : (parseInt(stats[10]) || 0),
+        dreb: isDnp ? 0 : (parseInt(stats[11]) || 0),
+        pf: isDnp ? 0 : (parseInt(stats[12]) || 0),
+        plusMinus: isDnp ? 0 : (parseInt(stats[13]) || 0),
+      })
+    }
+  }
+  return players
+}
+
+export async function getGameSummary(eventId: string): Promise<ESPNGameSummary | null> {
+  try {
+    const url = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/summary?event=${eventId}`
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const data = await espnFetch<any>(url)
+
+    const competition = data.header?.competitions?.[0]
+    if (!competition) return null
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const homeComp = competition.competitors?.find((c: any) => c.homeAway === 'home')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const awayComp = competition.competitors?.find((c: any) => c.homeAway === 'away')
+
+    const playerTeams: any[] = data.boxscore?.players ?? [] // eslint-disable-line @typescript-eslint/no-explicit-any
+    const homePlayerTeam = playerTeams.find((t: any) => t.team?.id === homeComp?.team?.id) // eslint-disable-line @typescript-eslint/no-explicit-any
+    const awayPlayerTeam = playerTeams.find((t: any) => t.team?.id === awayComp?.team?.id) // eslint-disable-line @typescript-eslint/no-explicit-any
+
+    return {
+      gameId: eventId,
+      date: competition.date ?? '',
+      isPlayoff: (data.header?.season?.type ?? 2) === 3,
+      status: competition.status?.type?.description ?? 'Final',
+      homeTeam: {
+        id: homeComp?.team?.id ?? '',
+        abbreviation: homeComp?.team?.abbreviation ?? '',
+        city: homeComp?.team?.location ?? '',
+        score: parseScore(homeComp?.score),
+        players: homePlayerTeam ? parseBoxPlayers(homePlayerTeam) : [],
+      },
+      awayTeam: {
+        id: awayComp?.team?.id ?? '',
+        abbreviation: awayComp?.team?.abbreviation ?? '',
+        city: awayComp?.team?.location ?? '',
+        score: parseScore(awayComp?.score),
+        players: awayPlayerTeam ? parseBoxPlayers(awayPlayerTeam) : [],
+      },
+    }
+  } catch {
+    return null
+  }
+}
+
 export { ESPN_TEAM_ID, SEASON as ESPN_SEASON }
