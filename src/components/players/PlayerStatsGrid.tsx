@@ -49,7 +49,7 @@ function formatValue(value: unknown, format: string): string {
   const num = Number(value)
   if (isNaN(num) || (num === 0 && format === 'pct')) return '—'
   if (format === 'pct') return formatPct(num)
-  if (format === 'plusminus') return num > 0 ? `+${num.toFixed(1)}` : num.toFixed(1)
+  if (format === 'plusminus') return num > 0 ? `+${Math.round(num)}` : String(Math.round(num))
   return num.toFixed(1)
 }
 

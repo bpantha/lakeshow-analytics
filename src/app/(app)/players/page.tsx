@@ -40,7 +40,7 @@ export default async function PlayersPage() {
           const tsPct = stats?.ts_pct != null ? `${(stats.ts_pct * 100).toFixed(1)}%` : '—'
           const stk   = stats?.stocks != null ? stats.stocks.toFixed(1) : '—'
           const pm    = stats?.plus_minus != null
-            ? (stats.plus_minus > 0 ? `+${stats.plus_minus.toFixed(1)}` : stats.plus_minus.toFixed(1))
+            ? (stats.plus_minus > 0 ? `+${Math.round(stats.plus_minus)}` : String(Math.round(stats.plus_minus)))
             : '—'
 
           return (

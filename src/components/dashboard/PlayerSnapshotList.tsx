@@ -80,7 +80,7 @@ export default function PlayerSnapshotList({ players, userRole: _userRole }: Pla
                       pm != null && pm < 0 ? 'text-red-400' :
                       'text-gray-500'
                     )}>
-                      {pm != null ? (pm > 0 ? `+${pm.toFixed(0)}` : pm.toFixed(0)) : '—'}
+                      {pm != null ? (pm > 0 ? `+${Math.round(pm)}` : String(Math.round(pm))) : '—'}
                     </td>
                   </tr>
                 )
