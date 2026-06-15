@@ -7,6 +7,7 @@ import {
   getUpcomingESPNGames,
   getRecentESPNGames,
   getTeamStats,
+  getLeagueStandings,
   type ESPNPlayerStats,
 } from '@/lib/nba/espn'
 import { CURRENT_SEASON } from '@/lib/nba/lakers-data'
@@ -14,6 +15,7 @@ import StatCard from '@/components/dashboard/StatCard'
 import UpcomingGamesESPN from '@/components/dashboard/UpcomingGamesESPN'
 import PlayerSnapshotList from '@/components/dashboard/PlayerSnapshotList'
 import AIInsightsFeed from '@/components/dashboard/AIInsightsFeed'
+import LeagueRankingsTable from '@/components/dashboard/LeagueRankingsTable'
 import { format } from 'date-fns'
 
 export const revalidate = 3600
@@ -25,10 +27,11 @@ export default async function DashboardPage() {
 
   const today = new Date()
 
-  const [roster, schedule, teamStats] = await Promise.all([
+  const [roster, schedule, teamStats, standings] = await Promise.all([
     getESPNRoster().catch(() => []),
     getLakersSchedule().catch(() => []),
     getTeamStats(),
+    getLeagueStandings().catch(() => []),
   ])
   const statsMap: Record<string, ESPNPlayerStats> = roster.length > 0
     ? await getESPNRosterStats(roster).catch(() => ({} as Record<string, ESPNPlayerStats>))
@@ -37,6 +40,8 @@ export default async function DashboardPage() {
   const { wins, losses, playoffWins, playoffLosses } = getLakersRecord(schedule)
   const upcoming = getUpcomingESPNGames(schedule, 5)
   const recentGames = upcoming.length === 0 ? getRecentESPNGames(schedule, 5) : []
+
+  const lakersRow = standings.find(t => t.teamId === 13)
 
   const { data: recentReport } = await supabase
     .from('nightly_reports')
@@ -81,29 +86,45 @@ export default async function DashboardPage() {
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-5 gap-4">
         <StatCard
           label="Off. Rating"
           value={teamStats.offRating > 0 ? teamStats.offRating.toFixed(1) : '—'}
-          sublabel="Points per 100 possessions"
+          sublabel="Points per 100 poss"
           accent="gold"
+          rank={lakersRow?.ortgRank}
+        />
+        <StatCard
+          label="Def. Rating"
+          value={teamStats.defRating > 0 ? teamStats.defRating.toFixed(1) : '—'}
+          sublabel="Opp. points per 100 poss"
+          rank={lakersRow?.drtgRank}
+        />
+        <StatCard
+          label="Net Rating"
+          value={teamStats.netRating !== 0
+            ? (teamStats.netRating > 0 ? `+${teamStats.netRating.toFixed(1)}` : teamStats.netRating.toFixed(1))
+            : '—'}
+          sublabel="ORtg minus DRtg"
+          accent={teamStats.netRating > 0 ? 'green' : undefined}
+          rank={lakersRow?.netRank}
         />
         <StatCard
           label="True Shooting %"
           value={teamStats.trueShootingPct > 0 ? `${teamStats.trueShootingPct.toFixed(1)}%` : '—'}
           sublabel="Overall scoring efficiency"
+          rank={lakersRow?.tsRank}
         />
         <StatCard
           label="Turnover %"
           value={teamStats.turnoverRatio > 0 ? teamStats.turnoverRatio.toFixed(1) : '—'}
-          sublabel="Turnovers per 100 possessions"
-        />
-        <StatCard
-          label="Stocks / Game"
-          value={teamStats.stocksPerGame > 0 ? teamStats.stocksPerGame.toFixed(1) : '—'}
-          sublabel="Steals + blocks per game"
+          sublabel="Per 100 possessions"
+          rank={lakersRow?.tovRank}
         />
       </div>
+
+      {/* League rankings */}
+      <LeagueRankingsTable standings={standings} />
 
       {/* Main grid */}
       <div className="grid grid-cols-3 gap-6">

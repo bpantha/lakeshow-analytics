@@ -6,9 +6,10 @@ interface StatCardProps {
   sublabel?: string
   accent?: 'gold' | 'purple' | 'green'
   trend?: 'up' | 'down'
+  rank?: number
 }
 
-export default function StatCard({ label, value, sublabel, accent, trend }: StatCardProps) {
+export default function StatCard({ label, value, sublabel, accent, trend, rank }: StatCardProps) {
   return (
     <div className="card">
       <p className="stat-label">{label}</p>
@@ -21,8 +22,11 @@ export default function StatCard({ label, value, sublabel, accent, trend }: Stat
       )}>
         {value}
       </p>
+      {rank != null && (
+        <p className="text-xs font-semibold text-gray-500 mt-0.5">#{rank} in NBA</p>
+      )}
       {sublabel && (
-        <p className="text-xs text-gray-500 mt-1">{sublabel}</p>
+        <p className="text-xs text-gray-500 mt-0.5">{sublabel}</p>
       )}
       {trend && (
         <span className={cn('text-xs font-medium', trend === 'up' ? 'text-green-400' : 'text-red-400')}>

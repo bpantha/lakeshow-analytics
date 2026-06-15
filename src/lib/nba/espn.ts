@@ -5,6 +5,39 @@
 const ESPN_TEAM_ID = 13 // Lakers ESPN ID
 const SEASON = 2026     // 2025-26 season end year
 
+const ESPN_TEAM_NAMES: Record<number, { name: string; abbr: string }> = {
+  1:  { name: 'Hawks',         abbr: 'ATL' },
+  2:  { name: 'Celtics',       abbr: 'BOS' },
+  3:  { name: 'Pelicans',      abbr: 'NOP' },
+  4:  { name: 'Bulls',         abbr: 'CHI' },
+  5:  { name: 'Cavaliers',     abbr: 'CLE' },
+  6:  { name: 'Mavericks',     abbr: 'DAL' },
+  7:  { name: 'Nuggets',       abbr: 'DEN' },
+  8:  { name: 'Pistons',       abbr: 'DET' },
+  9:  { name: 'Warriors',      abbr: 'GSW' },
+  10: { name: 'Rockets',       abbr: 'HOU' },
+  11: { name: 'Pacers',        abbr: 'IND' },
+  12: { name: 'Clippers',      abbr: 'LAC' },
+  13: { name: 'Lakers',        abbr: 'LAL' },
+  14: { name: 'Heat',          abbr: 'MIA' },
+  15: { name: 'Bucks',         abbr: 'MIL' },
+  16: { name: 'Timberwolves',  abbr: 'MIN' },
+  17: { name: 'Nets',          abbr: 'BKN' },
+  18: { name: 'Knicks',        abbr: 'NYK' },
+  19: { name: 'Magic',         abbr: 'ORL' },
+  20: { name: '76ers',         abbr: 'PHI' },
+  21: { name: 'Suns',          abbr: 'PHX' },
+  22: { name: 'Trail Blazers', abbr: 'POR' },
+  23: { name: 'Kings',         abbr: 'SAC' },
+  24: { name: 'Spurs',         abbr: 'SAS' },
+  25: { name: 'Thunder',       abbr: 'OKC' },
+  26: { name: 'Jazz',          abbr: 'UTA' },
+  27: { name: 'Wizards',       abbr: 'WSH' },
+  28: { name: 'Raptors',       abbr: 'TOR' },
+  29: { name: 'Grizzlies',     abbr: 'MEM' },
+  30: { name: 'Hornets',       abbr: 'CHA' },
+}
+
 // ESPN datetimes are UTC; NBA games on the West Coast play at night so the UTC date
 // is often one day ahead of the actual local game date. Convert to Pacific time.
 function toLocalDate(isoString: string): string {
@@ -188,10 +221,28 @@ export interface ESPNGame {
 }
 
 export interface ESPNTeamStats {
-  offRating: number      // points scored per 100 possessions
-  trueShootingPct: number // as a percentage out of 100 (e.g. 60.9)
-  turnoverRatio: number   // turnovers per 100 possessions
-  stocksPerGame: number   // steals + blocks per game
+  offRating: number
+  defRating: number
+  netRating: number
+  trueShootingPct: number  // 0–100 scale (e.g. 60.9)
+  turnoverRatio: number    // per 100 possessions
+  stocksPerGame: number
+}
+
+export interface ESPNLeagueTeamStats {
+  teamId: number
+  teamName: string
+  abbr: string
+  offRating: number
+  defRating: number
+  netRating: number
+  trueShootingPct: number
+  turnoverRatio: number
+  netRank: number
+  ortgRank: number
+  drtgRank: number
+  tsRank: number
+  tovRank: number
 }
 
 interface ScheduleResponse {
@@ -271,23 +322,107 @@ export function getLakersRecord(games: ESPNGame[]): { wins: number; losses: numb
   return { wins, losses, playoffWins, playoffLosses }
 }
 
+// Sum opponent points from regular-season schedule — used to compute DRtg
+async function getTeamOpponentPoints(teamId: number): Promise<number> {
+  const url = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams/${teamId}/schedule?season=${SEASON}&seasontype=2`
+  const data = await espnFetch<ScheduleResponse>(url)
+  const tidStr = String(teamId)
+  return (data.events ?? []).reduce((sum, e) => {
+    const comp = e.competitions[0]
+    if (!comp || !comp.status.type.completed) return sum
+    const opp = comp.competitors.find(c => c.team.id !== tidStr)
+    return opp ? sum + parseScore(opp.score) : sum
+  }, 0)
+}
+
 export async function getTeamStats(): Promise<ESPNTeamStats> {
   try {
-    // sports.core.api.espn.com has advanced metrics (TS%, TOV%, ORtg) vs basic endpoint
-    const url = `https://sports.core.api.espn.com/v2/sports/basketball/leagues/nba/seasons/${SEASON}/types/2/teams/${ESPN_TEAM_ID}/statistics`
-    const data = await espnFetch<CoreStatsResponse>(url)
-    const cats = data.splits?.categories ?? []
+    const [statsData, oppPts] = await Promise.all([
+      espnFetch<CoreStatsResponse>(
+        `https://sports.core.api.espn.com/v2/sports/basketball/leagues/nba/seasons/${SEASON}/types/2/teams/${ESPN_TEAM_ID}/statistics`
+      ),
+      getTeamOpponentPoints(ESPN_TEAM_ID),
+    ])
+    const cats = statsData.splits?.categories ?? []
     const points = pickStat(cats, 'points')
     const possessions = pickStat(cats, 'possessions')
+    const offRating = possessions > 0 ? (points / possessions) * 100 : 0
+    const defRating = possessions > 0 ? (oppPts / possessions) * 100 : 0
     return {
-      offRating: possessions > 0 ? (points / possessions) * 100 : 0,
+      offRating,
+      defRating,
+      netRating: offRating - defRating,
       trueShootingPct: pickStat(cats, 'trueShootingPct'),
       turnoverRatio: pickStat(cats, 'turnoverRatio'),
       stocksPerGame: pickStat(cats, 'avgSteals') + pickStat(cats, 'avgBlocks'),
     }
   } catch {
-    return { offRating: 0, trueShootingPct: 0, turnoverRatio: 0, stocksPerGame: 0 }
+    return { offRating: 0, defRating: 0, netRating: 0, trueShootingPct: 0, turnoverRatio: 0, stocksPerGame: 0 }
   }
+}
+
+export async function getLeagueStandings(): Promise<ESPNLeagueTeamStats[]> {
+  const ALL_IDS = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30]
+
+  type RawRow = {
+    teamId: number; teamName: string; abbr: string
+    offRating: number; defRating: number; netRating: number
+    trueShootingPct: number; turnoverRatio: number
+  }
+
+  const results = await Promise.allSettled(
+    ALL_IDS.map(async (tid): Promise<RawRow> => {
+      const teamInfo = ESPN_TEAM_NAMES[tid] ?? { name: `Team ${tid}`, abbr: String(tid) }
+      const [statsData, oppPts] = await Promise.all([
+        espnFetch<CoreStatsResponse>(
+          `https://sports.core.api.espn.com/v2/sports/basketball/leagues/nba/seasons/${SEASON}/types/2/teams/${tid}/statistics`
+        ),
+        getTeamOpponentPoints(tid),
+      ])
+      const cats = statsData.splits?.categories ?? []
+      const points = pickStat(cats, 'points')
+      const possessions = pickStat(cats, 'possessions')
+      const offRating = possessions > 0 ? (points / possessions) * 100 : 0
+      const defRating = possessions > 0 ? (oppPts / possessions) * 100 : 0
+      return {
+        teamId: tid,
+        teamName: teamInfo.name,
+        abbr: teamInfo.abbr,
+        offRating,
+        defRating,
+        netRating: offRating - defRating,
+        trueShootingPct: pickStat(cats, 'trueShootingPct'),
+        turnoverRatio: pickStat(cats, 'turnoverRatio'),
+      }
+    })
+  )
+
+  const teams = results
+    .filter(r => r.status === 'fulfilled')
+    .map(r => (r as PromiseFulfilledResult<RawRow>).value)
+    .sort((a, b) => b.netRating - a.netRating)
+
+  const rank = <K extends keyof RawRow>(arr: RawRow[], key: K, asc: boolean) =>
+    new Map(
+      [...arr].sort((a, b) => asc
+        ? (a[key] as number) - (b[key] as number)
+        : (b[key] as number) - (a[key] as number)
+      ).map((t, i) => [t.teamId, i + 1])
+    )
+
+  const ortgRankMap = rank(teams, 'offRating', false)
+  const drtgRankMap = rank(teams, 'defRating', true)   // lower DRtg = better defense
+  const tsRankMap   = rank(teams, 'trueShootingPct', false)
+  const tovRankMap  = rank(teams, 'turnoverRatio', true) // lower TOV% = better
+
+  return teams.map((t, i) => ({
+    ...t,
+    netRank:  i + 1,
+    ortgRank: ortgRankMap.get(t.teamId) ?? 0,
+    drtgRank: drtgRankMap.get(t.teamId) ?? 0,
+    tsRank:   tsRankMap.get(t.teamId) ?? 0,
+    tovRank:  tovRankMap.get(t.teamId) ?? 0,
+  }))
 }
 
 export function getUpcomingESPNGames(games: ESPNGame[], limit = 5): ESPNGame[] {
