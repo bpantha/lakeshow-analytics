@@ -51,10 +51,13 @@ export interface ESPNPlayerStats {
   fg_pct: number   // 0–1 decimal
   fg3_pct: number  // 0–1 decimal
   ft_pct: number   // 0–1 decimal
+  efg_pct: number  // 0–1 decimal — (FGM + 0.5×3PM) / FGA
+  ts_pct: number   // 0–1 decimal — pts / (2 × (FGA + 0.44×FTA))
   pf: number
   min: number
-  ts_pct: number   // 0–1 decimal
   plus_minus: number
+  stocks: number   // steals + blocks per game
+  at_ratio: number // assists / turnovers
 }
 
 interface RosterResponse {
@@ -115,15 +118,22 @@ export async function getESPNPlayerStats(espnId: string): Promise<ESPNPlayerStat
     const pts = pickStat(cats, 'avgPoints')
     const reb = pickStat(cats, 'avgRebounds')
     const ast = pickStat(cats, 'avgAssists')
+    const stl = pickStat(cats, 'avgSteals')
+    const blk = pickStat(cats, 'avgBlocks')
+    const tov = pickStat(cats, 'avgTurnovers')
     const fgPct = pickStat(cats, 'fieldGoalPct') / 100
     const fg3Pct = pickStat(cats, 'threePointFieldGoalPct') / 100
     const ftPct = pickStat(cats, 'freeThrowPct') / 100
     const gp = pickStat(cats, 'gamesPlayed')
+    const fga = pickStat(cats, 'avgFieldGoalsAttempted')
+    const fgm = pickStat(cats, 'avgFieldGoalsMade')
+    const fg3m = pickStat(cats, 'avgThreePointFieldGoalsMade')
     const fta = pickStat(cats, 'avgFreeThrowsAttempted')
 
-    // true shooting %: PTS / (2 * (FGA + 0.44 * FTA))
-    const fga = pickStat(cats, 'avgFieldGoalsAttempted')
+    // TS% = PTS / (2 × (FGA + 0.44 × FTA))
     const tsPct = fga + fta > 0 ? pts / (2 * (fga + 0.44 * fta)) : 0
+    // eFG% = (FGM + 0.5 × 3PM) / FGA
+    const efgPct = fga > 0 ? (fgm + 0.5 * fg3m) / fga : 0
 
     return {
       playerId: espnId,
@@ -131,18 +141,21 @@ export async function getESPNPlayerStats(espnId: string): Promise<ESPNPlayerStat
       pts,
       reb,
       ast,
-      stl: pickStat(cats, 'avgSteals'),
-      blk: pickStat(cats, 'avgBlocks'),
-      turnover: pickStat(cats, 'avgTurnovers'),
+      stl,
+      blk,
+      turnover: tov,
       oreb: pickStat(cats, 'avgOffensiveRebounds'),
       dreb: pickStat(cats, 'avgDefensiveRebounds'),
       fg_pct: fgPct,
       fg3_pct: fg3Pct,
       ft_pct: ftPct,
+      efg_pct: efgPct,
+      ts_pct: tsPct,
       pf: pickStat(cats, 'avgFouls'),
       min: pickStat(cats, 'avgMinutes'),
-      ts_pct: tsPct,
       plus_minus: pickStat(cats, 'plusMinus'),
+      stocks: stl + blk,
+      at_ratio: tov > 0 ? ast / tov : 0,
     }
   } catch {
     return null

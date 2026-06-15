@@ -8,7 +8,6 @@ import {
   getRecentESPNGames,
   getTeamStats,
   type ESPNPlayerStats,
-  type ESPNTeamStats,
 } from '@/lib/nba/espn'
 import { CURRENT_SEASON } from '@/lib/nba/lakers-data'
 import StatCard from '@/components/dashboard/StatCard'
@@ -111,16 +110,14 @@ export default async function DashboardPage() {
         <div className="col-span-2">
           <PlayerSnapshotList
             players={roster.map(p => ({
-              PLAYER_ID: p.id,
-              PLAYER_NAME: p.fullName,
+              PLAYER_ID:    p.id,
+              PLAYER_NAME:  p.fullName,
               PLAYER_POSITION: p.positionAbbr,
-              NUM: p.jersey,
-              GP: statsMap[p.id]?.gamesPlayed ?? null,
-              PTS: statsMap[p.id]?.pts ?? null,
-              REB: statsMap[p.id]?.reb ?? null,
-              AST: statsMap[p.id]?.ast ?? null,
-              FG_PCT: statsMap[p.id]?.fg_pct ?? null,
-              TS_PCT: statsMap[p.id]?.ts_pct ?? null,
+              PTS:          statsMap[p.id]?.pts ?? null,
+              REB:          statsMap[p.id]?.reb ?? null,
+              TS_PCT:       statsMap[p.id]?.ts_pct ?? null,
+              STK:          statsMap[p.id]?.stocks ?? null,
+              PLUS_MINUS:   statsMap[p.id]?.plus_minus ?? null,
             }))}
             userRole={profile?.role ?? 'analyst'}
           />

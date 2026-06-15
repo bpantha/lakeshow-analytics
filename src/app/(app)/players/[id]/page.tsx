@@ -42,15 +42,17 @@ export default async function PlayerPage({ params }: Props) {
     .eq('subject_type', 'player')
     .order('created_at', { ascending: false })
 
-  type StatKey = 'pts' | 'reb' | 'ast' | 'fg_pct' | 'fg3_pct' | 'ft_pct'
+  type StatKey = 'pts' | 'reb' | 'ast' | 'stl' | 'blk' | 'ts_pct' | 'efg_pct' | 'fg_pct' | 'fg3_pct' | 'ft_pct' | 'plus_minus' | 'at_ratio' | 'stocks'
 
   function calcBenchmark(key: StatKey, label: string, unit = '') {
     if (!playerAvg) return null
-    const playerVal = playerAvg[key] ?? 0
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const playerVal = (playerAvg as any)[key] ?? 0
     const vals = Object.values(allRosterStats)
-      .map(p => p[key] ?? 0)
-      .filter(v => v > 0)
-      .sort((a, b) => a - b)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .map(p => (p as any)[key] ?? 0)
+      .filter((v: number) => v !== 0)
+      .sort((a: number, b: number) => a - b)
     const avg = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0
     const idx = vals.findIndex(v => v >= playerVal)
     const percentile = vals.length ? Math.round((idx / vals.length) * 100) : 50
@@ -58,31 +60,34 @@ export default async function PlayerPage({ params }: Props) {
   }
 
   const benchmarks = playerAvg ? [
-    calcBenchmark('pts', 'PTS', 'PPG'),
-    calcBenchmark('reb', 'REB', 'RPG'),
-    calcBenchmark('ast', 'AST', 'APG'),
-    calcBenchmark('fg_pct', 'FG%', '%'),
-    calcBenchmark('fg3_pct', '3P%', '%'),
-    calcBenchmark('ft_pct', 'FT%', '%'),
+    calcBenchmark('pts',        'PTS',        'PPG'),
+    calcBenchmark('reb',        'REB',        'RPG'),
+    calcBenchmark('ast',        'AST',        'APG'),
+    calcBenchmark('ts_pct',     'TS_PCT',     '%'),
+    calcBenchmark('stl',        'STL',        'SPG'),
+    calcBenchmark('plus_minus', 'PLUS_MINUS', ''),
   ].filter(Boolean) as NonNullable<ReturnType<typeof calcBenchmark>>[] : []
 
   const stats = playerAvg ? {
-    PTS: playerAvg.pts,
-    REB: playerAvg.reb,
-    AST: playerAvg.ast,
-    STL: playerAvg.stl,
-    BLK: playerAvg.blk,
-    TOV: playerAvg.turnover,
-    OREB: playerAvg.oreb,
-    DREB: playerAvg.dreb,
-    FG_PCT: playerAvg.fg_pct,
-    FG3_PCT: playerAvg.fg3_pct,
-    FT_PCT: playerAvg.ft_pct,
-    PF: playerAvg.pf,
-    MIN: playerAvg.min,
-    GP: playerAvg.gamesPlayed,
+    PTS:        playerAvg.pts,
+    REB:        playerAvg.reb,
+    AST:        playerAvg.ast,
+    STL:        playerAvg.stl,
+    BLK:        playerAvg.blk,
+    TOV:        playerAvg.turnover,
+    OREB:       playerAvg.oreb,
+    DREB:       playerAvg.dreb,
+    FG_PCT:     playerAvg.fg_pct,
+    FG3_PCT:    playerAvg.fg3_pct,
+    FT_PCT:     playerAvg.ft_pct,
+    EFG_PCT:    playerAvg.efg_pct,
+    TS_PCT:     playerAvg.ts_pct,
+    AT_RATIO:   playerAvg.at_ratio,
+    STOCKS:     playerAvg.stocks,
     PLUS_MINUS: playerAvg.plus_minus,
-    TS_PCT: playerAvg.ts_pct,
+    PF:         playerAvg.pf,
+    MIN:        playerAvg.min,
+    GP:         playerAvg.gamesPlayed,
   } : {}
 
   return (

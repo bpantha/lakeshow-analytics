@@ -18,12 +18,12 @@ interface Props {
 }
 
 const STAT_LABELS: Record<string, string> = {
-  PTS: 'Scoring',
-  REB: 'Rebounds',
-  AST: 'Assists',
-  FG_PCT: 'FG%',
-  FG3_PCT: '3P%',
-  TS_PCT: 'TS%',
+  PTS:        'Scoring',
+  REB:        'Rebounds',
+  AST:        'Assists',
+  STL:        'Steals',
+  TS_PCT:     'TS%',
+  PLUS_MINUS: '+/-',
 }
 
 export default function BenchmarkChart({ benchmarks, playerName }: Props) {
@@ -72,7 +72,7 @@ export default function BenchmarkChart({ benchmarks, playerName }: Props) {
                 <span className="text-gray-400">{STAT_LABELS[b.stat_name] ?? b.stat_name}</span>
                 <div className="flex items-center gap-3">
                   <span className="text-gray-500">
-                    Pos avg: {b.stat_name.includes('PCT') ? `${(b.position_avg * 100).toFixed(1)}%` : b.position_avg.toFixed(1)}
+                    Avg: {b.stat_name.includes('PCT') ? `${(b.position_avg * 100).toFixed(1)}%` : b.position_avg.toFixed(1)}
                   </span>
                   <span className={`font-semibold ${getPercentileColor(b.percentile)}`}>
                     {b.percentile}th %ile

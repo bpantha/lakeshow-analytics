@@ -36,10 +36,12 @@ export default async function PlayersPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {sorted.map(player => {
           const stats = statsMap[player.id]
-          const pts = stats?.pts != null ? stats.pts.toFixed(1) : '—'
-          const reb = stats?.reb != null ? stats.reb.toFixed(1) : '—'
-          const ast = stats?.ast != null ? stats.ast.toFixed(1) : '—'
-          const fgPct = stats?.fg_pct != null ? `${(stats.fg_pct * 100).toFixed(1)}%` : '—'
+          const pts   = stats?.pts    != null ? stats.pts.toFixed(1) : '—'
+          const tsPct = stats?.ts_pct != null ? `${(stats.ts_pct * 100).toFixed(1)}%` : '—'
+          const stk   = stats?.stocks != null ? stats.stocks.toFixed(1) : '—'
+          const pm    = stats?.plus_minus != null
+            ? (stats.plus_minus > 0 ? `+${stats.plus_minus.toFixed(1)}` : stats.plus_minus.toFixed(1))
+            : '—'
 
           return (
             <Link key={player.id} href={`/players/${player.id}`}>
@@ -72,7 +74,7 @@ export default async function PlayersPage() {
                 </div>
 
                 <div className="grid grid-cols-4 gap-1 pt-3 border-t border-surface-3">
-                  {[['PTS', pts], ['REB', reb], ['AST', ast], ['FG%', fgPct]].map(([label, val]) => (
+                  {([['PTS', pts], ['TS%', tsPct], ['STK', stk], ['+/-', pm]] as [string, string][]).map(([label, val]) => (
                     <div key={label} className="text-center">
                       <p className="text-sm font-bold text-white">{val}</p>
                       <p className="text-xs text-gray-500 mt-0.5">{label}</p>
