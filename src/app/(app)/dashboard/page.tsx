@@ -8,6 +8,7 @@ import {
   getRecentESPNGames,
   getTeamStats,
   type ESPNPlayerStats,
+  type ESPNTeamStats,
 } from '@/lib/nba/espn'
 import { CURRENT_SEASON } from '@/lib/nba/lakers-data'
 import StatCard from '@/components/dashboard/StatCard'
@@ -82,22 +83,26 @@ export default async function DashboardPage() {
 
       {/* Stat cards */}
       <div className="grid grid-cols-4 gap-4">
-        <StatCard label="Roster Size" value={String(roster.length || '—')} sublabel="Active players" />
         <StatCard
-          label="Team PPG"
-          value={teamStats.pts > 0 ? teamStats.pts.toFixed(1) : '—'}
-          sublabel="2025-26 season"
+          label="Off. Rating"
+          value={teamStats.offRating > 0 ? teamStats.offRating.toFixed(1) : '—'}
+          sublabel="Points per 100 possessions"
           accent="gold"
         />
         <StatCard
-          label="Team RPG"
-          value={teamStats.reb > 0 ? teamStats.reb.toFixed(1) : '—'}
-          sublabel="2025-26 season"
+          label="True Shooting %"
+          value={teamStats.trueShootingPct > 0 ? `${teamStats.trueShootingPct.toFixed(1)}%` : '—'}
+          sublabel="Overall scoring efficiency"
         />
         <StatCard
-          label="Team APG"
-          value={teamStats.ast > 0 ? teamStats.ast.toFixed(1) : '—'}
-          sublabel="2025-26 season"
+          label="Turnover %"
+          value={teamStats.turnoverRatio > 0 ? teamStats.turnoverRatio.toFixed(1) : '—'}
+          sublabel="Turnovers per 100 possessions"
+        />
+        <StatCard
+          label="Stocks / Game"
+          value={teamStats.stocksPerGame > 0 ? teamStats.stocksPerGame.toFixed(1) : '—'}
+          sublabel="Steals + blocks per game"
         />
       </div>
 

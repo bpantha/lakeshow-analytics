@@ -175,9 +175,10 @@ export interface ESPNGame {
 }
 
 export interface ESPNTeamStats {
-  pts: number
-  reb: number
-  ast: number
+  offRating: number      // points scored per 100 possessions
+  trueShootingPct: number // as a percentage out of 100 (e.g. 60.9)
+  turnoverRatio: number   // turnovers per 100 possessions
+  stocksPerGame: number   // steals + blocks per game
 }
 
 interface ScheduleResponse {
@@ -257,35 +258,22 @@ export function getLakersRecord(games: ESPNGame[]): { wins: number; losses: numb
   return { wins, losses, playoffWins, playoffLosses }
 }
 
-interface TeamStatsResponse {
-  results: {
-    stats: {
-      categories: Array<{
-        stats: Array<{ name: string; value: number }>
-      }>
-    }
-  }
-}
-
 export async function getTeamStats(): Promise<ESPNTeamStats> {
   try {
-    const url = `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams/${ESPN_TEAM_ID}/statistics?season=${SEASON}&seasontype=2`
-    const data = await espnFetch<TeamStatsResponse>(url)
-    const cats = data.results?.stats?.categories ?? []
-    function pick(name: string) {
-      for (const cat of cats) {
-        const s = cat.stats.find(x => x.name === name)
-        if (s) return s.value
-      }
-      return 0
-    }
+    // sports.core.api.espn.com has advanced metrics (TS%, TOV%, ORtg) vs basic endpoint
+    const url = `https://sports.core.api.espn.com/v2/sports/basketball/leagues/nba/seasons/${SEASON}/types/2/teams/${ESPN_TEAM_ID}/statistics`
+    const data = await espnFetch<CoreStatsResponse>(url)
+    const cats = data.splits?.categories ?? []
+    const points = pickStat(cats, 'points')
+    const possessions = pickStat(cats, 'possessions')
     return {
-      pts: pick('avgPoints'),
-      reb: pick('avgRebounds'),
-      ast: pick('avgAssists'),
+      offRating: possessions > 0 ? (points / possessions) * 100 : 0,
+      trueShootingPct: pickStat(cats, 'trueShootingPct'),
+      turnoverRatio: pickStat(cats, 'turnoverRatio'),
+      stocksPerGame: pickStat(cats, 'avgSteals') + pickStat(cats, 'avgBlocks'),
     }
   } catch {
-    return { pts: 0, reb: 0, ast: 0 }
+    return { offRating: 0, trueShootingPct: 0, turnoverRatio: 0, stocksPerGame: 0 }
   }
 }
 
